@@ -17,8 +17,9 @@ void portSet(bit, bit, bit, bit, bit, bit);
 void setTimes(void);
 unsigned char random(void);
 void lightLEDS(unsigned char);
-void wait(unsigned char);
+void wait(unsigned int);
 unsigned char readButtons(void);
+void checkPB3(void);
 
 
 //Declare Global Variables
@@ -37,11 +38,14 @@ sbit at 0xA3 PB3;	// Push button 3, associated with Port 2, Pin 3
 unsigned char adInput;
 unsigned char onTime;
 unsigned char offTime;
-unsigned char randNums[5];
+unsigned char randNums[15];
 unsigned char i;
 unsigned char buttonPress;
 bit incorrect;
-unsigned char Count;
+unsigned int Count;
+unsigned char numLights;
+bit continueGame;
+unsigned char j;
 
 
 
@@ -53,34 +57,40 @@ void main(void)
 	Timer_Init();		// Initialize Timer 0 
 	ADC_Init(); 		//Initialize ADC
 	putchar(' ');
+	numLights = 3;
+	continueGame = 0;
 
-	printf("\r\n\r\n\r\nReady to start! \r\n\r\n");
+	printf("\r\n\r\n\r\n\r\n\r\nReady to start! \r\n\r\n");
 	
 	while(1)
 	{
 		portSet(0,1,0,0,0,0);
 		incorrect = 0;
-		if(!PB3)
+		if(!PB3 || (continueGame))
 		{
-			printf("\r\nNew Game\r\n");
+			if (!continueGame)
+			{
+				printf("\r\nNew Game\r\n");
+			}
 			setTimes();
-			for (i = 0; i < 5; i++)
+			for (i = 0; i < numLights; i++)
 			{
 				randNums[i] = random();
 			}
 			portSet(0,0,0,0,0,0);
 			
 			wait(1000);
-			for (i = 0; i < 5; i++)
+			for (i = 0; i < numLights; i++)
 			{
 				lightLEDS(randNums[i]);
 				wait(onTime);
+				printf("Debug mode: led for step %d is %d\r\n", i+1, randNums[i]+1);
 				portSet(0,0,0,0,0,0);
 				wait(offTime);
 			}
 			
 			portSet(1,0,0,0,0,0);
-			for (i = 0; i < 5; i++)
+			for (i = 0; i < numLights; i++)
 			{
 				buttonPress = readButtons();
 				while (buttonPress == (255))
@@ -98,25 +108,70 @@ void main(void)
 					wait(1500);
 					portSet(0,0,0,0,0,0);
 					incorrect = 1;
+					numLights = 3;
+					continueGame = 0;
 					break;
 				}
 				wait(200);
 			}
 			if(!incorrect)
 			{
-				printf("Congratulations! You won!\r\n");
+				printf("Congratulations! You won the level!\r\n");
 				for (i = 0; i < 3; i++)
 				{
 					portSet(1,0,0,1,1,1);
-					wait(1000);
+					wait(200);
 					portSet(0,0,0,0,0,0);
-					wait(1000);
+					wait(200);
+				}
+				numLights++;
+				if (numLights > 15)
+				{
+					printf("Congratulations! You're a memory master!\r\n");
+					numLights = 3;
+					for (i = 0; i < 10; i++)
+					{
+						portSet(1,0,0,1,1,1);
+						wait(200);
+						portSet(0,0,0,0,0,0);
+						wait(200);
+					}
+				}
+				printf("If you would like to keep playing, press the start game pushbutton within 5 seconds\r\n");
+				for (i = 0; i < 5; i++)
+				{
+					printf("%d\r\n", 5-i);
+					checkPB3();
+					if (continueGame)
+					{
+						printf("You are now memorizing a sequence of %d LEDs\r\n", numLights);
+						break;
+					}
+					continueGame = 0;
+				}
+				if (!continueGame)
+				{
+					printf("Quitting.\r\n\r\n");
+					numLights = 3;
 				}
 			}
 		}
 	}
 }
 
+void checkPB3()
+{
+	continueGame = 0;
+	for (j = 0; j < 100; j++)
+	{
+		if(!PB3)
+		{
+			continueGame = 1;
+		}
+		wait(10);
+	}
+	
+}
 unsigned char readButtons()
 {
 	while(PB0 && PB1 && PB2)
@@ -132,14 +187,16 @@ unsigned char readButtons()
 		return -1;
 }
 
-void wait(unsigned char waitTime) //note: wait time is in milliseconds
+void wait(unsigned int waitTime) //note: wait time is in milliseconds
 {
 		TR0 = 1;
-		while((Count * 2.96) < (waitTime))
+		while((Count / .337) < (waitTime))
 		{
+			//printf("count = %d\r\n", Count);
 		}
 		TR0 = 0;
 		Count = 0;
+		return;
 }
 
 void lightLEDS(unsigned char n)
