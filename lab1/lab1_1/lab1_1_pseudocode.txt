@@ -1,0 +1,62 @@
+/*
+Michael O'Keefe, Virginia Hicox
+Section 4
+September 8, 2009
+lab1_1_pseudocode.txt
+This is the pseduocode for the lab 1.1 C program, designed to turn on several LEDs and a buzzer.
+*/
+
+//Function prototypes
+void Port_Init(void); //This will initialize the ports for input and output
+int sensor1(void); //Function which checks Pushbutton 1
+int sensor2(void); //Function which checks Pushbutton 2
+int slideswitch1(void); //Function which checks the slide switch
+void Set_outputs(void); //Function which sets the output bits, based on the state of the input bits
+
+//Global variables
+LED0, BILED0, BILED1, BUZZER, SS, PB0, and PB1 all get assigned sbits (Ports) here
+
+main function
+{
+	call board initialization functions
+	call I/O initialization functions
+
+	infinite loop
+	{
+		Set_outputs //loop through this function infinitely
+	}
+	
+}
+
+Port_Init
+{
+	set the ports used by all the peripherals to the correct states for each pin
+}
+
+Set_outputs
+//check the state of each pushbutton and the slide switch
+{
+	if (SS is off)
+	{
+		set LED0 to on
+	}
+	else
+	{
+		if (PB0 is on)
+		{
+			if (PB1 is on)
+			{
+				`set BUZZER to on
+			}
+			else
+			{
+				set BILED0 to on
+			}
+		}
+		else if (PB1 is on)
+		{
+			set BILED1 to on
+		}
+	}
+}
+	

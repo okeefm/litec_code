@@ -1,0 +1,32 @@
+/* Lab 1.2 Pseudocode: LED Game
+Michael O'Keefe, Virginia Hickox
+This code is designed to play a game with the participant: Light 2 LEDs, and make them hit the correct pushbuttons for those LEDs. */
+
+All necessary chip initialization
+
+Function prototypes
+
+Declare necssary sbits
+
+main function
+	initialize the ports
+	
+	infinite loop
+		if the switch is set to on, start a new game
+			
+			for (i = 0; i < 10; i++)
+				get a random number between 0 and 2
+				if it's 0, light LED0
+				if it's 1, light LED1
+				if it's 2, light both
+				
+				listen for 1 second for button presses
+					if the button presses are correct, light the green BILED
+					if they're incorrect, light the red one
+				if there's no button presses, light the red BILED
+				
+				record the score (correct/incorrect)
+				
+			output the score to the serial interface
+		
+		if it's set to off, stop the game

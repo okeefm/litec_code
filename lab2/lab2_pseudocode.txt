@@ -1,0 +1,54 @@
+//Pseudocode for Lab 2: LED memory game
+//Michael O'Keefe, partner Virginia Hickox
+//9-20-09
+
+Declare function prototypes
+
+Declare global variables
+	sbit BUZZER
+	sbit BILED0
+	sbit BILED1
+	sbit LED0
+	sbit LED1
+	sbit LED2
+	sbit PB0
+	sbit PB1
+	sbit PB2
+	sbit PB3 //game start pushbutton
+
+main function
+	
+	initialize the 8051
+	initialize the timer & interrupts
+	set I/O pins
+	
+	infinite loop:
+	{
+		set LEDs to off (just in case)
+		set BILED to red
+		set BUZZER to off
+		
+		if PB3 is pressed
+		{
+			//get the game ready
+			read the value of the potentiometer
+			LED on time = pot value * 5 + 200 
+			LED off time = on time / 2
+			pick 5 random numbers between 0 and 2, put them into an array
+			set BILED off
+			
+			//show the pattern
+			for each element of the random number array in sequence
+			light the LED corresponding to that number for the amount of time specified by on_time
+			turn it off for the amount of time specified by off_time
+			go to the next random number
+			
+			//get the player's input
+			set BILED to green
+			listen to PB0-PB3
+				for each button press (there should be 5), record whether it was correct or incorrect
+				print each response to the serial port
+			if all the responses are correct, flash all 3 LEDs 3 times
+			if any response is incorrect, sound the buzzer for 1.5 seconds
+		}
+	}
