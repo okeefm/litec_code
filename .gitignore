@@ -1,0 +1,16 @@
+*~
+*.#*
+*.pdf
+*.PDF
+*.adb
+*.cdb
+*.hex
+*.lst
+*.map
+*.mem
+*.rel
+*.rst
+*.out
+*.sym
+*.lnk
+*.asm
