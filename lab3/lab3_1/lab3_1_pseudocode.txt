@@ -1,0 +1,17 @@
+//Pseudocode for lab 3.1: Speed controller/steering servo
+//Name: Michael O'Keefe
+//Date: 10/2/09
+
+Function prototypes
+
+Declare sbits
+Declare other global variables
+
+main function
+	initialize system
+	initialize I/O ports
+	initialize counter
+	initialize interrupts
+	
+	infinite loop
+		
