@@ -17,7 +17,7 @@ void portSet(bit, bit, bit, bit, bit, bit);
 void setTimes(void);
 unsigned char random(void);
 void lightLEDS(unsigned char);
-void wait(unsigned char);
+void wait(unsigned int);
 unsigned char readButtons(void);
 
 
@@ -35,8 +35,8 @@ sbit at 0xA3 PB3;	// Push button 3, associated with Port 2, Pin 3
 
 //non-sbit variables
 unsigned char adInput;
-unsigned char onTime;
-unsigned char offTime;
+unsigned int onTime;
+unsigned int offTime;
 unsigned char randNums[5];
 unsigned char i;
 unsigned char buttonPress;
@@ -48,7 +48,7 @@ unsigned char Count;
 void main(void)
 {
 	Sys_Init();			// System Initialization
-	Port_Init();		// Initialize ports 2 and 3 
+	Port_Init();		// Initialize ports 1, 2 and 3 
 	Interrupt_Init();	//Interrupt Initialization
 	Timer_Init();		// Initialize Timer 0 
 	ADC_Init(); 		//Initialize ADC
@@ -132,7 +132,7 @@ unsigned char readButtons()
 		return -1;
 }
 
-void wait(unsigned char waitTime) //note: wait time is in milliseconds
+void wait(unsigned int waitTime) //note: wait time is in milliseconds
 {
 		TR0 = 1;
 		while((Count * 2.96) < (waitTime))
