@@ -1,0 +1,10 @@
+This is the code for Michael O'Keefe, in the Fall 2009 section of Laboratory Introduction to Embedded Control at Rensselaer Polytechnic Institute in Troy, NY
+The code is designed for the SiLabs C8051F020 EVB, and is written in C
+
+This code was written in conjunction with Virginia Hickox, Vanessa Alphonse, and Evan Frank.
+
+This code is open for all to look at; however, not all of it was written by me (much of it was written by the instructors) and header files are missing that are necessary for system initialization and correct I2C function.
+
+If you are in LITEC, be warned that using this code as your own will probably be considered plagiarism by the instructors, and you will probably be punished for it.
+
+Contact me @ okeefm (at) rpi (dot) edu for more information about the code.
