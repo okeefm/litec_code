@@ -1,0 +1,25 @@
+Laboratory Worksheet 5 answers
+
+a)
+void Port_Init(void){
+	P1MDIN &= ~0x02; //Set Port 1, Pin 1 to analog input
+	P1MDOUT &= ~0x02; //Set Port 1, Pin 1 to open drain mode (input)
+	P1 |= 0x02; //Set Port 1, Pin 1 to logic high
+}
+
+b)
+void ADC_Init(void){
+	REF0CN = 0x03;                     /* Set Vref to use internal reference voltage (2.4 V) */
+    ADC1CN = 0x80;                     /* Enable A/D converter (ADC1) */
+	ADC1CF &= ~0x01;
+    ADC1CF |= 0x02;                    /* Set A/D converter gain to 1 */
+}
+
+c)
+void AD_test(void){
+	AMX1SL = 1;                        /* Set P1.1 as the analog input for ADC1 */
+    ADC1CN = ADC1CN & ~0x20;           /* Clear the “Conversion Completed” flag */
+    ADC1CN = ADC1CN | 0x10;            /* Initiate A/D conversion */
+    while ((ADC1CN & 0x20) == 0x00);   /* Wait for conversion to complete */
+    P1_1_Result = ADC1;                /* Return digital value in ADC1 register */
+}
