@@ -140,7 +140,7 @@ void wait(unsigned int waitTime)
 	count = 0;
 	while ((count * 20) <= waitTime)
 	{
-		//printf("wait count = %d\r\n", count);
+		printf("wait count = %d\r\n", count);
 	}
 	count = 0;
 }
