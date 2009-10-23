@@ -1,3 +1,9 @@
+/* lab 3, part 3 code: Simple automation for speed control
+Michael O'Keefe, Vanessa Alphonse, Evan Frank
+10/20/09
+This code polls an ultrasonic ranger over I2C, and uses that data to control the speed of a motor.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <c8051_SDCC.h>
