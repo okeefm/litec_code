@@ -194,12 +194,6 @@ int findVoltage(void){
 	return advolt;
 }
 
-//-----------------------------------------------------------------------------
-// Port_Init
-//-----------------------------------------------------------------------------
-//
-// Set up ports for input and output
-//
 void Port_Init(){
 	P1MDOUT = 0xFF; //set output pin for CEX0 in push-pull mode
  
@@ -213,22 +207,10 @@ void Port_Init(){
 
 }
 
-//-----------------------------------------------------------------------------
-// XBR0_Init
-//-----------------------------------------------------------------------------
-//
-// Set up the crossbar
-//
 void XBR0_Init(){
 XBR0 = 0x27;	//configure crossbar with UART, SPI, SMBus, and CEX channels 
 }
 
-//-----------------------------------------------------------------------------
-// PCA_Init
-//-----------------------------------------------------------------------------
-//
-// Set up Programmable Counter Array
-//
 void PCA_Init(void)
 {
          PCA0MD = 0x81;            	// SYSCLK/12, enable CF interrupts, suspend when idle
