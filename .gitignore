@@ -1,7 +1,5 @@
 *~
 *.#*
-*.pdf
-*.PDF
 *.adb
 *.cdb
 *.hex
