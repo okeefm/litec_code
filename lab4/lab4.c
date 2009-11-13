@@ -1,4 +1,13 @@
-/* Sample code for Lab 3.1. This program can be used to test the steering servo */
+/* Lab 4 code. This code was written by the group at 25-27B.
+11/13/09
+Michael O'Keefe, Vanessa Alphonse, Evan Frank
+And the members of the other group, whose names I do not know.
+This code is designed to implement the electronic compass, ultrasonic ranger,
+LCD screen, numeric keypad, A/D battery voltage detection,
+steering servo and speed control servo on the C8051 "smart car."
+*/
+******************************************************
+
 #include <c8051_SDCC.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,11 +18,6 @@
 #define PW_MAX 3502
 #define PW_NEUT 2765
 
-
-
-//-----------------------------------------------------------------------------
-// 8051 Initialization Functions
-//-----------------------------------------------------------------------------
 void Port_Init(void);
 void PCA_Init (void);
 void SMB_Init(void);
@@ -48,7 +52,6 @@ unsigned int desheading;
 int compass_calibration = 0;
 int tempcali;
 sbit at 0xB7 Steering_Switch;
-
 char keypad = -1;
 unsigned int MOTOR_PW = 0;
 unsigned char r_count = 0;
@@ -94,28 +97,24 @@ while(1){
 		lcd_print("Distance: %d\n", cmrange);
 		lcd_print("Heading: %d\n", heading);
 		adcount = 0;
-		/*printf("Voltage: %d\n\r", voltage);
-		printf("Distance: %d\n\r", cmrange);
-		printf("Heading: %d\n\r", heading);
-		printf("Desired Heading: %d\n\r", desheading);*/
 		}
 
 
 	if (SS){
-			Range_Update();
+			Range_Update(); //update the range
 			if (cmrange <= 10)
-				Drive_Motor(PW_MAX);
+				Drive_Motor(PW_MAX); //if range > 90, drive the motor in full reverse
 			else if (cmrange >= 90)
-				Drive_Motor(PW_MIN);
+				Drive_Motor(PW_MIN); //if range < 10, drive the motor in full forward
 			else if ((cmrange >= (neutral_range - 5)) && (cmrange <= (neutral_range + 5)))
-				Drive_Motor(PW_NEUT);
+				Drive_Motor(PW_NEUT); //if range is within 5 of neutral_range, put it in neutral
 			else
 			{
-				Drive_Motor(3502 - (18.425*(cmrange-10)));
+				Drive_Motor(3502 - (18.425*(cmrange-10))); //otherwise, drive it according to this equation
 			}
 		}
 	else
-		Drive_Motor(PW_NEUT);
+		Drive_Motor(PW_NEUT); //if ss is not flipped, put it in neutral
 
 	if(Steering_Switch){
 	if (new_heading){ // enough overflows for a new heading
@@ -148,7 +147,7 @@ while(1){
 void neutral_range_int()
 {
 	char tempval;
-	sbit valid = 1;
+	bit valid = 1;
 	wait(500);
 	lcd_print("Neutral range default: %d\n", neutral_range);
 	lcd_print("Input your own value between 30-80 cm\n");
@@ -156,31 +155,31 @@ void neutral_range_int()
 	while(valid){
 		tempval = -1;
 		while(tempval == -1){
-			tempval = read_keypad();
-					printf("1.5\r\n");
+			tempval = read_keypad(); //read a digit in from the keypad
+					printf(""); //helps if this is here. Not sure why.
 		}
-		neutral_range = (tempval - 48) * 10;
-		printf("2\n\r");
+		neutral_range = (tempval - 48) * 10; //convert ascii to correct decimal value (tens place)
+		printf(""); //helps if this is here. Not sure why.
 		while (tempval != -1){
-			tempval = read_keypad();
+			tempval = read_keypad(); //debouncing
 		}
 		
-		printf("3\n\r");
+		printf(""); //helps if this is here. Not sure why.
 		while(tempval == -1){
 			tempval = read_keypad();
-			printf("4\r\n");
+			printf(""); //helps if this is here. Not sure why.
 		}
-		neutral_range += tempval - 48;
+		neutral_range += tempval - 48; //convert ascii to correct decimal value (ones place)
 		printf("Neutral range is %d\r\n", neutral_range);
 		
 		if(neutral_range <= 80 && neutral_range >= 30){
-			valid = 0;
+			valid = 0; //check if the neutral range input is in the right range
 			}
 		else {
 			lcd_clear();
-			lcd_print("Invalid input try again\n\r");
+			lcd_print("Invalid input; try again (30-80 cm is valid)\n\r");
 			while (tempval != -1){
-			tempval = read_keypad();
+			tempval = read_keypad(); //debouncing
 			}
 		}
 		
@@ -189,9 +188,9 @@ void neutral_range_int()
 
 int findVoltage(void){
 	float advolt;
-	adinput = read_AD_input(7);
+	adinput = read_AD_input(7); //read the voltage on pin 1.7 and convert it to an unsigned char
 	advolt = adinput;
-	advolt = 15 *(advolt / 256);
+	advolt = 15 *(advolt / 256); //do some math, get a float out between 0-15(V)
 	return advolt;
 }
 
@@ -213,6 +212,7 @@ void Port_Init(){
 	P1 |= 0x80; //Set Port 1, Pin 7 to logic high
 
 }
+
 //-----------------------------------------------------------------------------
 // XBR0_Init
 //-----------------------------------------------------------------------------
@@ -220,9 +220,9 @@ void Port_Init(){
 // Set up the crossbar
 //
 void XBR0_Init(){
-XBR0 = 0x27;	//configure crossbar with UART, SPI, SMBus, and CEX channels as
-				// in worksheet
+XBR0 = 0x27;	//configure crossbar with UART, SPI, SMBus, and CEX channels 
 }
+
 //-----------------------------------------------------------------------------
 // PCA_Init
 //-----------------------------------------------------------------------------
@@ -239,6 +239,7 @@ void PCA_Init(void)
          EA = 1;                  	// enable all interrupts
 
 }
+
 //-----------------------------------------------------------------------------
 // PCA_ISR
 //-----------------------------------------------------------------------------
@@ -453,17 +454,17 @@ void Drive_Init(void)
 	//set initial value
 	MOTOR_PW = PW_NEUT;
 	
-	PCA0CPL2 = 0xFFFF - MOTOR_PW;
-	PCA0CPH2 = (0xFFFF - MOTOR_PW) >> 8;
-	wait(1000);
+	PCA0CPL2 = 0xFFFF - MOTOR_PW; //set low byte of motor CCM PW register
+	PCA0CPH2 = (0xFFFF - MOTOR_PW) >> 8; //set high byte
+	wait(1000); //make sure the motor sits in neutral for a second
 }
 
 void wait(unsigned int waitTime)
 {
-	count = 0;
+	count = 0; //reset count
 	while ((count * 20) <= waitTime)
 	{
-		printf("");
+		printf(""); //this is necessary. Not sure why.
 	}
 	count = 0;
 }
@@ -472,8 +473,8 @@ void Range_Update(void)
 {
 	if (new_range)
 	{
-		new_range = 0;
-		cmrange = ReadRanger();
+		new_range = 0; //reset the new_range flag
+		cmrange = ReadRanger(); //get the range back from the ranger
 		Data[0] = 0x51;  //write 0x51 to reg 0 of the ranger:
 		i2c_write_data(ranger_addr, 0,  Data, 1) ;  // write one byte of data to reg 0 at addr
 	}
@@ -482,9 +483,9 @@ void Range_Update(void)
 
 void Drive_Motor(unsigned int motorval)
 {
-	MOTOR_PW = motorval;
-	PCA0CPL2 = 0xFFFF - MOTOR_PW;
-	PCA0CPH2 = (0xFFFF - MOTOR_PW) >> 8;
+	MOTOR_PW = motorval; //set the motor_pw to whatever value was passed in
+	PCA0CPL2 = 0xFFFF - MOTOR_PW; //set low byte
+	PCA0CPH2 = (0xFFFF - MOTOR_PW) >> 8; //set high byte
 		
 }
 
@@ -492,9 +493,10 @@ unsigned int ReadRanger(void)
 {
 	unsigned int range =0;
 	i2c_read_data(ranger_addr, 2, Data, 2);  // read two bytes, starting at reg 2
-	range = (((unsigned int)Data[0] << 8) | Data[1]);
+	range = (((unsigned int)Data[0] << 8) | Data[1]); //concatenate the two bytes.
 	return range; 
 }
+
 void heading_int(void){
 	printf("press keypad to enter heading\n\r");
 	printf("2 - North\n\r");
