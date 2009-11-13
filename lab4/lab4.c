@@ -1,7 +1,7 @@
 /* Lab 4 code. This code was written by the group at 25-27B.
 11/13/09
 Michael O'Keefe, Vanessa Alphonse, Evan Frank
-And the members of the other group, whose names I do not know.
+Walter Altmann, Adrick Del Rosario
 This code is designed to implement the electronic compass, ultrasonic ranger,
 LCD screen, numeric keypad, A/D battery voltage detection,
 steering servo and speed control servo on the C8051 "smart car."
