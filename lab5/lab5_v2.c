@@ -185,7 +185,12 @@ void Drive_Init(void){
 	PCA0CPH2 = (0xFFFF - MOTOR_PW) >> 8; //set high byte
 	PCA0CPL3 = 0xFFFF - MOTOR_PW; //set low byte of right fan CCM PW register
 	PCA0CPH3 = (0xFFFF - MOTOR_PW) >> 8; //set high byte
+	lcd_print("setting neutral\n");
 	delay_time(10000000); //make sure the motor sits in neutral for a second
+	lcd_clear();
+	lcd_print("finished setting neutral\n");
+	delay_time(1000000);
+	lcd_clear();
 }
 //---------------------------------------------------------------------------------
 // Ranger Functions
@@ -286,22 +291,24 @@ unsigned char read_AD_input(unsigned char n){ //note: on gondola; voltage divide
 
 void voltage_update(void){
 	float advolt;
-	adinput = read_AD_input(5); //read the voltage on pin 1.7 and convert it to an unsigned char
+	adinput = read_AD_input(5); //read the voltage on pin 1.5 and convert it to an unsigned char
 	advolt = adinput;
 	advolt = advolt/.236; //do some math, get a float out between 0-10(V)
 	if (advolt < MIN_VOLT){
-		Drive_Motor(PW_MIN);
-		while(1){}
+		while(1){
+			Drive_Motor(PW_MIN);
+			lcd_print("LOW VOLTAGE\n");
+		}
 	}
-	adinput = advolt;
+	adinput = (char)advolt;
 }
 //---------------------------------------------------------------------------------
 // General Functions
 //---------------------------------------------------------------------------------
 void PCA_ISR (void) interrupt 9 {
          if (CF){
-                 PCA0L = 0xFF;     // low byte of start count
-                 PCA0H = 0x6F;     // high byte of start count
+                 PCA0L = 0xFF & 28762;     // low byte of start count
+                 PCA0H = 28762>>8;     // high byte of start count
                  CF = 0;           // Very important - clear interrupt flag
          }
          else PCA0CN &= 0xC0; // all other type 9 interrupts
@@ -333,7 +340,7 @@ int get_input(void){
 		Data[4] = 0;
 		pause = 0;
 		number = 0;
-		lcd_print("Enter a 4-digit or less number and confirm with *\n");
+		lcd_print("Enter a <=4-digit number, confirm with *\n");
 		for(x = 0;x<5;x++){
 			tempval = read_keypad();
 			tempval = -1;
@@ -394,11 +401,11 @@ void set_variable(void){
 	}
 	if (Drive_GD){
 		lcd_clear();
-		lcd_print("Enter height gain\n");
+		lcd_print("Enter height kp\n");
 		get_input();
 		ranger_kp = number;
 		lcd_clear();
-		lcd_print("Enter steering derivative\n");
+		lcd_print("Enter height kd\n");
 		get_input();
 		ranger_kd = number;
 	}
@@ -406,7 +413,7 @@ void set_variable(void){
 		int motor_angle = 2750;
 		bit cor =0;
 		lcd_clear();
-		lcd_print("Use 1 and 3 to rotate drive motors/n");
+		lcd_print("Use 1 and 3 to rotate drive motors\n");
 		lcd_print("Press * to confirm\n");
 		while (cor ==0){
 			if(read_keypad() == '1')
