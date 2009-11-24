@@ -25,7 +25,7 @@ void PCA_Init (void);
 void SMB_Init(void);
 void XBR0_Init(void);
 void Drive_Init(void);
-void ADC_Init();
+void ADC_Init(void);
 //---------------------------------------------------------------------------------
 // Ranger/Drive Motor Function Prototypes
 //---------------------------------------------------------------------------------
@@ -67,11 +67,11 @@ long int curr_err = 0;
 unsigned int SERVO_PW = 0;
 bit new_heading = 0;
 unsigned char h_count = 0;
-unsigned int desired_heading = 0;
-unsigned int current_heading = 0;
+int desired_heading = 0;
+int current_heading = 0;
 int compass_calibration = 0;
-long int steering_error;
-long int steering_pre_error;
+long steering_error;
+long steering_pre_error;
 int steering_kp = 1;
 int steering_kd = 1;
 //---------------------------------------------------------------------------------
@@ -99,29 +99,29 @@ void main(void){
 	Sys_Init();
 	putchar(' ');
 	XBR0_Init();
+	Port_Init();
 	SMB_Init();
 	PCA_Init();
-	Drive_Init();
-	Port_Init();
 	ADC_Init();
-	
+	Drive_Init();
+	printf("hello");
 	while(1){
 		set_variable();
-		voltage_update();
-		if (Enable_LCD && (new_heading == 0) && (printcount > 8)){
+		//voltage_update();
+		if (Enable_LCD && (printcount > 8)){
 			lcd_clear();
-			lcd_print("Heading: %d/r/n", current_heading);
-			lcd_print("Range:   %d/r/n", cmrange);
-			lcd_print("Voltage: %d/r/n", adinput);
+			lcd_print("Heading: %d\n", current_heading);
+			lcd_print("Range:   %d\n", cmrange);
+			lcd_print("Voltage: %d\n", adinput);
 			printcount = 0;
 		}
-		if (Enable_HT && (new_heading ==0) && (printcount > 8)){
-			printf("enter something");
+		if (Enable_HT && (printcount > 8)){
+			printf("%d		%d		%d\r\n", current_heading,current_heading, adinput);
 			printcount = 0;
-		}
+			}
 		if(Drive_Switch){
-			Range_Update(); //update the range
-			Drive_Motor(ranger_pd());
+			  Range_Update(); //update the range
+			  Drive_Motor(ranger_pd()); //
 		}
 		else
 			Drive_Motor(PW_NEUT); //if ss is not flipped, put it in neutral
@@ -140,9 +140,9 @@ void main(void){
 // Init Functions
 //---------------------------------------------------------------------------------
 void ADC_Init(void){
-    REF0CN = 0x03;                     /* Set Vref to use internal reference voltage (2.4 V) */
-    ADC1CN = 0x80;                     /* Enable A/D converter (ADC1) */
-    ADC1CF |= 0x01;                    /* Set A/D converter gain to 1 */
+    REF0CN = 0x03;                     //Set Vref to use internal reference voltage (2.4 V)
+    ADC1CN = 0x80;                     //Enable A/D converter (ADC1)
+    ADC1CF |= 0x01;                    // Set A/D converter gain to 1
 }
 
 void SMB_Init(void){
@@ -151,9 +151,9 @@ void SMB_Init(void){
 }
 
 void Port_Init(){
-	P1MDOUT = 0xFF; //set output pin for CEX0 in push-pull mode
-	P3MDOUT &= ~0xC0; //set Port 3, pin 6 and P3.7 to open-drain mode (input)
-	P3 |= 0xC0; //Write a logic high to P3.6 and P3.7
+	P0MDOUT = 0x0F; //set output pin for CEX0 in push-pull mode
+	P3MDOUT &= ~0xFF; //set Port 3, pin 6 and P3.7 to open-drain mode (input)
+	P3 |= 0xFF; //Write a logic high to P3.6 and P3.7
 	P1MDIN &= ~0x20; //Set Port 1, Pin 5 to analog input
 	P1MDOUT &= ~0x20; //Set Port 1, Pin 5 to open drain mode (input)
 	P1 |= 0x20; //Set Port 1, Pin 5 to logic high
@@ -166,6 +166,7 @@ void XBR0_Init(){
 void PCA_Init(void){
          PCA0MD = 0x81;            	// SYSCLK/12, enable CF interrupts, suspend when idle
          PCA0CPM0 = 0xC2;			// 16 bit, enable compare, enable PWM
+		 PCA0CPM1 = 0xC2;
 		 PCA0CPM2 = 0xC2;			// 16 bit, enable compare, enable PWM
 		 PCA0CPM3 = 0xC2;			// 16 bit, enable compare, enable PWM
          EIE1 |= 0x08;            	// enable PCA interrupts
@@ -184,7 +185,7 @@ void Drive_Init(void){
 	PCA0CPH2 = (0xFFFF - MOTOR_PW) >> 8; //set high byte
 	PCA0CPL3 = 0xFFFF - MOTOR_PW; //set low byte of right fan CCM PW register
 	PCA0CPH3 = (0xFFFF - MOTOR_PW) >> 8; //set high byte
-	delay_time(100000000); //make sure the motor sits in neutral for a second
+	delay_time(10000000); //make sure the motor sits in neutral for a second
 }
 //---------------------------------------------------------------------------------
 // Ranger Functions
@@ -206,7 +207,8 @@ void Range_Update(void){
 		new_range = 0; //reset the new_range flag
 		i2c_read_data(ranger_addr, 2, Data, 2);  // read two bytes, starting at reg 2
 		cmrange = (((unsigned int)Data[0] << 8) | Data[1]); //concatenate the two bytes.
-		i2c_write_data(ranger_addr, 0,  0x51, 1) ;  // write one byte of data to reg 0 at addr
+		Data[0] = 0x51;
+		i2c_write_data(ranger_addr,0,Data,1) ;  // write one byte of data to reg 0 at addr
 	}
 }
 		
@@ -242,29 +244,30 @@ void Compass_Update(void){
 }
 
 void Steering_Control(void){
-	long int steering_temp;
+	long steering_temp;
 	if(desired_heading > 1800){
 	      desired_heading = desired_heading - 3600;
 		  }
-    steering_error = current_heading - desired_heading;
 
-	/*if (steering_error < 1800){
-	     steering_control = 0-steering_error;
-		 }
-	else {
-	     steering_control = 3600-steering_error;
-		} 
-	steering_error = desired_heading - current_heading;*/
-
-	steering_temp = (long)steering_kp*steering_error + (long)steering_kd*(current_heading - steering_pre_error);
-	steering_pre_error = steering_error;
+    steering_error = (current_heading-desired_heading);
 	
+	if(steering_error < 1800){
+		steering_error = 0-steering_error;
+		}
+	else {
+		steering_error = 3600-steering_error;
+		}
+	
+	steering_temp = (long)steering_kp*steering_error + (long)steering_kd*(steering_error - steering_pre_error) + 2750;
+	steering_pre_error = steering_error;
 	SERVO_PW = steering_temp;
+	
 
 	if (SERVO_PW > PW_RIGHT)
 		SERVO_PW = PW_RIGHT;
 	else if (SERVO_PW < PW_LEFT)
 		SERVO_PW = PW_LEFT;
+
 			
 	PCA0CPL0 = (0xFFFF - SERVO_PW);
 	PCA0CPH0 = (0xFFFF - SERVO_PW) >> 8;
@@ -285,7 +288,7 @@ void voltage_update(void){
 	float advolt;
 	adinput = read_AD_input(5); //read the voltage on pin 1.7 and convert it to an unsigned char
 	advolt = adinput;
-	advolt = advolt/.236; //do some math, get a float out between 0-15(V)
+	advolt = advolt/.236; //do some math, get a float out between 0-10(V)
 	if (advolt < MIN_VOLT){
 		Drive_Motor(PW_MIN);
 		while(1){}
@@ -320,97 +323,104 @@ int get_input(void){
 	char tempval = 0;
 	char x;
 	bit correct = 0;
+	bit pause = 0;
 	number = 0;
 	while(correct == 0){
-		lcd_print("Enter a 4-digit or less number and confirm with *");
+		Data[0] = 0;
+		Data[1] = 0;
+		Data[2] = 0;
+		Data[3] = 0;
+		Data[4] = 0;
+		pause = 0;
+		number = 0;
+		lcd_print("Enter a 4-digit or less number and confirm with *\n");
 		for(x = 0;x<5;x++){
 			tempval = read_keypad();
+			tempval = -1;
 			while(tempval == -1){
 				tempval = read_keypad();
 			}
-			Data[x] = tempval - 48;
+			Data[x] = tempval;
+			lcd_print("%c",Data[x]);
 			if(tempval == '*'){
 				break;
 			}
+			delay_time(100);
 			while(tempval != -1){
 			tempval = read_keypad();
 			}
 		}
-     	for(x=0;x<5;x++){
-			if(Data[x] == '*'){
-			break;
-			}
-		}
-		for (x=(x-1);x>=0;x--){
-			number = Data[4-x]*10^(x-1);
-		}
-		lcd_print("You entered: %d/r/n", number);
-		lcd_print("Correct? *-YES");
-		tempval = read_keypad();
-		while(tempval == -1){
-			tempval = read_keypad();
-			}
-		x = tempval;
-		while(tempval != -1){
-			tempval = read_keypad();
-			}
-		if(x == '*'){
-		    correct = 1;
-			}
+		if (Data[1] == ('*'))
+			number = (Data[0]-48);
+		if (Data[2] == ('*'))
+			number = ((Data[1]-48)+(Data[0]-48)*10);
+		if (Data[3] == ('*'))
+			number = ((Data[2]-48)+(Data[1]-48)*10+(Data[0]-48)*100);
+		if (Data[4] == ('*'))
+			number = ((Data[3]-48) + (Data[2]-48)*10+(Data[1]-48)*100+(Data[0]-48)*1000);
+		
+		lcd_clear();
+		lcd_print("You entered: %d\n", number);
+		delay_time(1000000);
+		correct = 1;
+		lcd_clear();
+		
 	}
+	
 	return number;
 }
 
 void set_variable(void){
 	if (Heading_Height){
 		lcd_clear();
-		lcd_print("Enter desired heading");
+		lcd_print("Enter desired heading\n");
 		get_input();
 		desired_heading = number;
+		printf("hey");
 		lcd_clear();
-		lcd_print("Enter desired height");
+		lcd_print("Enter desired height\n");
 		get_input();
 		neutral_range = number;
 	}
 	if (Steering_GD){
 		lcd_clear();
-		lcd_print("Enter steering gain");
+		lcd_print("Enter steering kp\n");
 		get_input();
 		steering_kp = number;
 		lcd_clear();
-		lcd_print("Enter steering derivative");
+		lcd_print("Enter steering kd\n");
 		get_input();
 		steering_kd = number;
 	}
 	if (Drive_GD){
 		lcd_clear();
-		lcd_print("Enter height gain");
+		lcd_print("Enter height gain\n");
 		get_input();
 		ranger_kp = number;
 		lcd_clear();
-		lcd_print("Enter steering derivative");
+		lcd_print("Enter steering derivative\n");
 		get_input();
 		ranger_kd = number;
 	}
 	if (Drive_Angle){
 		int motor_angle = 2750;
-		bit correct =0;
+		bit cor =0;
 		lcd_clear();
-		lcd_print("Use 1 and 3 to rotate drive motors/r/n");
-		lcd_print("Press * to confirm\r\n");
-		while (correct ==0){
+		lcd_print("Use 1 and 3 to rotate drive motors/n");
+		lcd_print("Press * to confirm\n");
+		while (cor ==0){
 			if(read_keypad() == '1')
-				motor_angle = motor_angle - 2;
+				motor_angle = motor_angle - 1;
 			if(read_keypad() == '3')
-				motor_angle = motor_angle + 2;
+				motor_angle = motor_angle + 1;
 			if(read_keypad() == '*')
-				correct = 1;
+				cor = 1;
 			if(motor_angle < 2000)
 				motor_angle = 2000;
 			else if(motor_angle > 3500)
 				motor_angle = 3500;
-			PCA0CPL0 = 0xFFFF - motor_angle; //set low byte of left fan CCM PW register
-			PCA0CPH0 = (0xFFFF - motor_angle) >> 8; //set high byte
+			PCA0CPL1 = 0xFFFF - motor_angle; //set low byte of left fan CCM PW register
+			PCA0CPH1 = (0xFFFF - motor_angle) >> 8; //set high byte
 		}
 	}
 
