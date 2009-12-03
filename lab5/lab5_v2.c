@@ -197,7 +197,7 @@ void Drive_Init(void){
 //---------------------------------------------------------------------------------
 unsigned int ranger_pd(void){
 	long int tmp_pw;
-	curr_err = neutral_range - cmrange;
+	curr_err = (-1)*(neutral_range - cmrange);
 	tmp_pw = (long)ranger_kp*curr_err + (long)ranger_kd*(curr_err - ranger_error);
 	if (tmp_pw > (long)PW_MAX)
 		tmp_pw = PW_MAX;
@@ -296,7 +296,7 @@ void voltage_update(void){
 	advolt = advolt/.236; //do some math, get a float out between 0-10(V)
 	if (advolt < MIN_VOLT){
 		while(1){
-			Drive_Motor(PW_MIN);
+			Drive_Motor(PW_MAX);
 			lcd_print("LOW VOLTAGE\n");
 		}
 	}
